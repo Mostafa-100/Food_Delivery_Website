@@ -1,4 +1,4 @@
-import MenuItem from "@/components/MenuItem";
+import MenuItem from "../components/MenuItem";
 
 function Menu() {
   const menuItems: { imgUrl: string; name: string }[] = [
@@ -14,18 +14,18 @@ function Menu() {
   ];
   return (
     <div>
-      <div className="container mx-auto">
-        <div>
+      <div className="container mx-auto px-2 lg:px-0">
+        <div className="text-center lg:text-left">
           <h2 className="text-3xl font-medium text-slate-900 mt-7 mb-2">
             Explore our menu
           </h2>
-          <p className="w-1/2 text-neutral-500">
+          <p className="px-2 md:px-0 lg:w-1/2 text-neutral-500">
             Lorem ipsum dolor sit amet consectetur adipisicing elit.
             Exercitationem inventore saepe ratione et consectetur aliquid atque,
             voluptatibus eius pariatur
           </p>
         </div>
-        <div className="flex gap-3 flex-wrap justify-between mt-6">
+        <div className="flex gap-3 flex-wrap justify-center mt-6">
           {menuItems.map((item, index) => (
             <MenuItem imgUrl={item.imgUrl} itemName={item.name} key={index} />
           ))}
