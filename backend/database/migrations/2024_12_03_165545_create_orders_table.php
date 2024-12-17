@@ -13,20 +13,20 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->float('montant');
             $table->string('firstName');
             $table->string('lastName');
             $table->string('email');
+            $table->string('phone');
             $table->string('street');
             $table->string('city');
             $table->string('state');
             $table->string('zipCode');
             $table->string('country');
-            $table->string('phone');
-            $table->string('address');
             $table->integer('numberOfItems');
             $table->enum('status', ['unfinished','food processing', 'out for delivery', 'delivered']);
+            $table->longText('session_checkout_id')->nullable();
             $table->timestamps();
         });
     }

@@ -9,13 +9,19 @@ import { IoCloseSharp } from "react-icons/io5";
 import { useDispatch } from "react-redux";
 import getCookie from "../../functions/getCookie";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import axios from "axios";
 
-interface stateProps {
-  emailErrorMessage: null;
-  passwordErrorMessage: null;
+interface FormState {
+  emailErrorMessage: string | null;
+  passwordErrorMessage: string | null;
 }
 
-function reducer(state: stateProps, action: { type: string; payload: string }) {
+type Action =
+  | { type: "setEmailError"; payload: string }
+  | { type: "setPasswordError"; payload: string }
+  | { type: "resetFormErrors" };
+
+function reducer(state: FormState, action: Action) {
   switch (action.type) {
     case "setEmailError":
       return {
@@ -43,59 +49,60 @@ function Login() {
 
   const dispatch = useDispatch();
 
-  const [state, reducerDispatch] = useReducer(reducer, {
+  const initialState: FormState = {
     emailErrorMessage: null,
     passwordErrorMessage: null,
-  });
+  };
+
+  const [state, reducerDispatch] = useReducer(reducer, initialState);
 
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e) {
-    const formData = new FormData(e.target);
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    const formData = new FormData(e.target as HTMLFormElement);
 
     setLoading(true);
     e.preventDefault();
 
-    const response = await fetch(`${apiHost}/login`, {
-      method: "POST",
-      headers: {
-        Accept: "Application/json",
-        "X-XSRF-TOKEN": getCookie("XSRF-TOKEN") || "",
-      },
-      body: formData,
-      credentials: "include",
-    });
+    try {
+      await axios.post(`${apiHost}/login`, formData, {
+        headers: {
+          "X-XSRF-TOKEN": getCookie("XSRF-TOKEN") ?? "",
+        },
+        withCredentials: true,
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      const formErrors = errorData.errors;
-
-      reducerDispatch({ type: "resetFormErrors" });
-
-      if (Object.prototype.hasOwnProperty.call(formErrors, "email")) {
-        reducerDispatch({
-          type: "setEmailError",
-          payload: formErrors.email[0],
-        });
-      }
-
-      if (Object.prototype.hasOwnProperty.call(formErrors, "password")) {
-        reducerDispatch({
-          type: "setPasswordError",
-          payload: formErrors.password[0],
-        });
-      }
-    } else {
       dispatch(setIsLoggedIn());
       dispatch(setShowForm());
       dispatch(setShowLogin());
-    }
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const errorData = error.response.data;
 
+        const formErrors = errorData.errors;
+
+        reducerDispatch({ type: "resetFormErrors" });
+
+        if (Object.prototype.hasOwnProperty.call(formErrors, "email")) {
+          reducerDispatch({
+            type: "setEmailError",
+            payload: formErrors.email[0],
+          });
+        }
+
+        if (Object.prototype.hasOwnProperty.call(formErrors, "password")) {
+          reducerDispatch({
+            type: "setPasswordError",
+            payload: formErrors.password[0],
+          });
+        }
+      }
+    }
     setLoading(false);
   }
 
   return (
-    <div className="absolute left-0 top-0 h-lvh w-full z-30 grid place-items-center mt-2">
+    <div className="absolute left-0 top-0 h-lvh w-full z-30 grid place-items-center">
       <form
         className="bg-white rounded-lg p-8 w-full max-w-96 space-y-6 mx-3 md:mx-0"
         onSubmit={handleSubmit}
@@ -133,7 +140,7 @@ function Login() {
             />
             {state.passwordErrorMessage && (
               <div className="text-sm text-red-500">
-                {state.passwordErrorMsg}
+                {state.passwordErrorMessage}
               </div>
             )}
           </div>

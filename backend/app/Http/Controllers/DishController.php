@@ -7,15 +7,24 @@ use Illuminate\Http\Request;
 
 class DishController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $baseUrl = "http://127.0.0.1:8000/storage/dishes/";
+        $baseUrl = env("APP_URL") . "/storage/dishes/";
         $dishes = Dish::all();
+        $cart = $request->user()?->cart;
 
         foreach($dishes as $dish) {
+            if(!$cart?->get()?->isEmpty() && $cart?->dishes?->contains('pivot.dish_id', $dish->id)) {
+                $dish->inCart = true;
+                $dish->quantity = $cart->dishes->where('pivot.dish_id', $dish->id)->first()->pivot->quantity;
+            } else {
+                $dish->inCart = false;
+            }
+
             $dish->imageUrl = $baseUrl . $dish->imageUrl;
         }
         
+        /* Do caching, redis or client side caching */
         return $dishes;
     }
 

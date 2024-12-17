@@ -5,14 +5,21 @@ import { useDispatch } from "react-redux";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { FaRegCircleCheck } from "react-icons/fa6";
 import getCookie from "../../functions/getCookie";
+import axios from "axios";
 
 interface stateProps {
-  nameErrorMessage: null;
-  emailErrorMessage: null;
-  passwordErrorMessage: null;
+  nameErrorMessage: string | null;
+  emailErrorMessage: string | null;
+  passwordErrorMessage: string | null;
 }
 
-function reducer(state: stateProps, action: { type: string; payload: string }) {
+type Action =
+  | { type: "setNameError"; payload: string }
+  | { type: "setEmailError"; payload: string }
+  | { type: "setPasswordError"; payload: string }
+  | { type: "resetFormErrors" };
+
+function reducer(state: stateProps, action: Action) {
   switch (action.type) {
     case "setNameError":
       return {
@@ -54,27 +61,23 @@ function Signup() {
 
   const dispatch = useDispatch();
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     setLoading(true);
 
-    const formData = new FormData(e.target);
+    const formData = new FormData(e.target as HTMLFormElement);
 
-    formData.append("password_confirmation", formData.get("password") || "");
-
-    const response = await fetch(`${apiHost}/register`, {
-      method: "POST",
-      headers: {
-        Accept: "Application/json",
-        "X-XSRF-TOKEN": getCookie("XSRF-TOKEN") || "",
-      },
-      body: formData,
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
+    try {
+      await axios.post(`${apiHost}/register`, formData, {
+        headers: {
+          Accept: "Application/json",
+        },
+        withCredentials: true,
+      });
+      setSuccess(true);
+    } catch (error) {
+      const errorData = error.response.data;
       const formErrors = errorData.errors;
 
       reducerDispatch({ type: "resetFormErrors" });
@@ -99,10 +102,7 @@ function Signup() {
           payload: formErrors.password[0],
         });
       }
-    } else {
-      setSuccess(true);
     }
-
     setLoading(false);
   }
 
@@ -186,7 +186,11 @@ function Signup() {
                   }`
             } transition-colors`}
           >
-            {success ? "You can log in now" : "Create account"}
+            {loading
+              ? "Please wait"
+              : success
+              ? "You can log in now"
+              : "Create account"}
             {loading && (
               <AiOutlineLoading3Quarters className="animate-spin ease-linear text-sm" />
             )}

@@ -1,28 +1,35 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import Intro from "./components/HeroSection";
-import Menu from "./components/MenuSection";
-import TopDishes from "./components/TopDishesSection";
-import Cta from "./components/Cta";
-import Footer from "./components/Footer";
-import Login from "./components/auth/Login";
-import Signup from "./components/auth/Signup";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "./redux/store";
+
+import Home from "./pages/Home";
+import Cart from "./pages/Cart";
+import Order from "./pages/Order";
+import Orders from "./pages/Orders";
+import isUserLoggedIn from "./functions/isUserLoggedIn";
 import { useEffect } from "react";
+import { setIsLoggedIn } from "./redux/auth";
 
 function App() {
-  useEffect(() => {
-    const apiHost = import.meta.env.VITE_LARAVEL_API_URL;
-    fetch(`${apiHost}/sanctum/csrf-cookie`, {
-      credentials: "include",
-    });
-  }, []);
-
-  const { showForm, showLogin, showSignup } = useSelector(
-    (state) => state.auth
+  const { showForm, isLoggedIn } = useSelector(
+    (state: RootState) => state.auth
   );
 
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const checkIfUserIsLoggedIn = async () => {
+      const value = await isUserLoggedIn();
+      if (value) {
+        dispatch(setIsLoggedIn());
+      }
+    };
+    checkIfUserIsLoggedIn();
+  }, [isLoggedIn]);
+
   return (
-    <>
+    <Router>
       <div
         className={
           showForm
@@ -31,15 +38,23 @@ function App() {
         }
       >
         <Navbar />
-        <Intro />
-        <Menu />
-        <TopDishes />
-        <Cta />
-        <Footer />
-        {showForm && showLogin && <Login />}
-        {showForm && showSignup && <Signup />}
+        {isLoggedIn ? (
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/order" element={<Order />} />
+            <Route path="/orders" element={<Orders />} />
+          </Routes>
+        ) : (
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/cart" element={<Home />} />
+            <Route path="/order" element={<Home />} />
+            <Route path="/orders" element={<Home />} />
+          </Routes>
+        )}
       </div>
-    </>
+    </Router>
   );
 }
 

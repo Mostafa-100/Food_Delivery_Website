@@ -1,4 +1,4 @@
-function Intro() {
+function HeroSection() {
   return (
     <div className="container px-2 md:px-0 mx-auto">
       <div className="relative bg-[url('intro.jpg')] xl:w-4/5 xl:mx-auto my-3 rounded-xl pt-28 px-16 pb-8 bg-center bg-cover z-10">
@@ -23,4 +23,4 @@ function Intro() {
   );
 }
 
-export default Intro;
+export default HeroSection;

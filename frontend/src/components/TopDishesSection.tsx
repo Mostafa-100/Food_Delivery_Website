@@ -1,24 +1,41 @@
+import { useSelector } from "react-redux";
 import Dish from "./Dish";
 import { useState, useEffect } from "react";
+import { RootState } from "../redux/store";
+import axios from "axios";
 
 interface DishProps {
   id: number;
   imageUrl: string;
   name: string;
-  numOfStars: number;
+  numberOfStars: number;
   snippet: string;
   price: number;
+  inCart: boolean;
+  quantity: number;
 }
 
-function TopDishes() {
+function TopDishesSection() {
   const apiHost = import.meta.env.VITE_LARAVEL_API_URL;
   const [dishes, setDishes] = useState([]);
 
+  const { isLoggedIn } = useSelector((state: RootState) => state.auth);
+
   useEffect(() => {
-    fetch(`${apiHost}/api/dishes`)
-      .then((response) => response.json())
-      .then((data) => setDishes(data));
-  });
+    axios
+      .get(`${apiHost}/api/dishes`, {
+        withCredentials: true,
+      })
+      .then((response) => {
+        setDishes(response.data);
+      })
+      .catch((error) => {
+        if (axios.isAxiosError(error)) {
+          console.error("Error in fetching items", error.response.data);
+        }
+        console.error("Error in fetching items", error);
+      });
+  }, [isLoggedIn]);
 
   return (
     <div className="py-9">
@@ -28,8 +45,8 @@ function TopDishes() {
             Top dishes near you
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {dishes.map((dish: DishProps) => (
-              <Dish key={dish.id} {...dish} />
+            {dishes?.map((dish) => (
+              <Dish key={(dish as DishProps).id} {...(dish as DishProps)} />
             ))}
           </div>
         </div>
@@ -38,4 +55,4 @@ function TopDishes() {
   );
 }
 
-export default TopDishes;
+export default TopDishesSection;
